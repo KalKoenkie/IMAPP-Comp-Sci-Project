@@ -22,6 +22,7 @@ auto to_color(int k) {
 }
 
 int main() {
+    // Define the image dimensions
     const int display_width = 800;
     const int display_height = 800;
 
@@ -35,20 +36,48 @@ int main() {
     sf::Image image;
     image.create(display_width, display_height);
 
+    // Define the region in the complex plane
     const double x_min = -2.0;
     const double x_max = 1.0;
     const double y_min = -1.0;
     const double y_max = 1.0;
 
-    tbb::parallel_for(                                  // parallel_for to parallelize the loop
-        tbb::blocked_range<int>(0, display_height),     // blocked_range for rows
-        [&](tbb::blocked_range<int> const& r) {         // [&] to capture all variables by reference. blocked_range to specify the range
-            for (int y = r.begin(); y != r.end(); ++y) {
-                for (int x = 0; x != display_width; ++x) {
-                    auto k = mandelbrot(top_left + Complex{delta_x * x, delta_y * y});
-                    image.setPixel(x, y, to_color(k));
+    // Define list that stores the grain size and the corresponding time taken
+    std::vector<std::pair<int, double>> grain_size_times;
+
+    // Loop over different grain sizes to test performance
+    for (int grain_size = 1; grain_size < display_height; grain_size *= 2) {  // We can of course change the grain size progression
+        auto start = std::chrono::steady_clock::now();
+
+        // Execute the parallel computation using the TBB package
+        tbb::parallel_for(                                                                           // parallel_for to parallelize the loop
+            tbb::blocked_range2d<int>(0, display_height, grain_size, 0, display_width, grain_size),  // blocked_range2d to specify the 2D range with grain size
+            [&](tbb::blocked_range2d<int> const& r) {                                                // [&] to capture all variables by reference. blocked_range2d to specify the range
+                for (int y = r.rows().begin(); y != r.rows().end(); ++y) {
+                    for (int x = r.cols().begin(); x != r.cols().end(); ++x) {
+                        auto k = mandelbrot(top_left + Complex{delta_x * x, delta_y * y});
+                        image.setPixel(x, y, to_color(k));
+                    }
                 }
-            }
-        });
+            });
+
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        grain_size_times.emplace_back(grain_size, elapsed.count());
+        std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed.count() << " seconds\n";
+    }
+
+    // No grain size specified, commented out to keep it in case the loop above does not work
+    // // Execute the parallel computation using the TBB package
+    // tbb::parallel_for(                                  // parallel_for to parallelize the loop
+    //     tbb::blocked_range<int>(0, display_height),     // blocked_range for rows
+    //     [&](tbb::blocked_range<int> const& r) {         // [&] to capture all variables by reference. blocked_range to specify the range
+    //         for (int y = r.begin(); y != r.end(); ++y) {
+    //             for (int x = 0; x != display_width; ++x) {
+    //                 auto k = mandelbrot(top_left + Complex{delta_x * x, delta_y * y});
+    //                 image.setPixel(x, y, to_color(k));
+    //             }
+    //         }
+    //     });
     image.saveToFile("mandelbrot.png");
 }
