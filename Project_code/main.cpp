@@ -1,5 +1,4 @@
 #include <oneapi/tbb.h>
-
 #include <SFML/Graphics.hpp>
 #include <atomic>
 #include <chrono>
@@ -67,7 +66,7 @@ int main() {
         std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed.count() << " seconds\n";
     }
 
-    // No grain size specified, commented out to keep it in case the loop above does not work
+    // // No grain size specified, commented out to keep it in case the loop above does not work
     // // Execute the parallel computation using the TBB package
     // tbb::parallel_for(                                  // parallel_for to parallelize the loop
     //     tbb::blocked_range<int>(0, display_height),     // blocked_range for rows
