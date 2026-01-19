@@ -5,6 +5,7 @@
 #include <complex>
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 using Complex = std::complex<double>;
 
@@ -37,6 +38,8 @@ int main() {
     sf::Image image;
     image.create(display_width, display_height);
 
+    std::ofstream output_file("grain_size_times.txt"); // Creating an output file
+
     // Define list that stores the grain size and the corresponding time taken
     std::vector<std::pair<int, double>> grain_size_times;
 
@@ -54,12 +57,16 @@ int main() {
                         image.setPixel(x, y, to_color(k));
                     }
                 }
-            });
+		
+            }, 
+	    tbb::simple_partitioner{}); // requested parameter
 
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed = end - start;
         grain_size_times.emplace_back(grain_size, elapsed.count());
         std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed.count() << " seconds\n";
+	
+	output_file << grain_size << " " << elapsed.count() << "\n";  // Saving to a file
     }
 
     // // No grain size specified, commented out to keep it in case the loop above does not work
@@ -74,5 +81,6 @@ int main() {
     //             }
     //         }
     //     });
+    output_file.close();
     image.saveToFile("mandelbrot.png");
 }
