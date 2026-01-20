@@ -59,7 +59,7 @@ int main() {
                 }
 		
             }, 
-	    tbb::auto_partitioner{}); // requested parameter
+	    tbb::simple_partitioner{}); // requested parameter
 
         auto end = std::chrono::steady_clock::now();
         auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
