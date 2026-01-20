@@ -62,11 +62,11 @@ int main() {
 	    tbb::simple_partitioner{}); // requested parameter
 
         auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        grain_size_times.emplace_back(grain_size, elapsed.count());
-        std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed.count() << " seconds\n";
-	
-	output_file << grain_size << " " << elapsed.count() << "\n";  // Saving to a file
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        grain_size_times.emplace_back(grain_size, elapsed_time.count());
+        std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed_time.count() << " microseconds\n";
+
+        output_file << grain_size << " " << elapsed_time.count() << "\n";  // Saving to a file
     }
 
     // // No grain size specified, commented out to keep it in case the loop above does not work
