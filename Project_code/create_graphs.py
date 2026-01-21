@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 grain_sizes = []
 times = []
 number_of_tasks = []
-with open('grain_size_times.txt', 'r') as file:
+with open('/workspace/grain_size_times.txt', 'r') as file:
     for line in file:
         grain_size, time_taken, task_count = line.split()
         grain_sizes.append(int(grain_size))

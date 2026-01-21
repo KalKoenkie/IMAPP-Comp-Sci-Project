@@ -95,5 +95,5 @@ int main() {
     output_file.close();
     image.saveToFile("mandelbrot.png");
 
-    (void) system("python3 create_graphs.py"); // Call the Python script to create the plot. (void) to suppress unused return value warning
+    (void) system("python3 /workspace/IMAPP-Comp-Sci-Project/Project_code/create_graphs.py"); // Call the Python script to create the plot. (void) to suppress unused return value warning
 }
