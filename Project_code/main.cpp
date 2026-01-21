@@ -40,33 +40,36 @@ int main() {
 
     std::ofstream output_file("grain_size_times.txt"); // Creating an output file
 
-    // Define list that stores the grain size and the corresponding time taken
-    std::vector<std::pair<int, double>> grain_size_times;
+    // Define list that stores the grain size, time taken, and number of tasks
+    std::vector<std::tuple<int, double, int>> grain_size_times;
 
     // Loop over different grain sizes to test performance
     for (int grain_size = 1; grain_size <= display_height; grain_size < 10 ? ++grain_size : grain_size += 10) {  // We can of course change the grain size progression
         auto start = std::chrono::steady_clock::now();
 
+        std::atomic<int> task_count{0};
+
         // Execute the parallel computation using the TBB package
         tbb::parallel_for(                                                                           // parallel_for to parallelize the loop
             tbb::blocked_range2d<int>(0, display_height, grain_size, 0, display_width, grain_size),  // blocked_range2d to specify the 2D range with grain size
             [&](tbb::blocked_range2d<int> const& r) {                                                // [&] to capture all variables by reference. blocked_range2d to specify the range
+                ++task_count;
                 for (int y = r.rows().begin(); y != r.rows().end(); ++y) {
                     for (int x = r.cols().begin(); x != r.cols().end(); ++x) {
                         auto k = mandelbrot(top_left + Complex{delta_x * x, delta_y * y});
                         image.setPixel(x, y, to_color(k));
                     }
                 }
-		
+        
             }, 
-	    tbb::simple_partitioner{}); // requested parameter
+        tbb::simple_partitioner{}); // requested parameter
 
         auto end = std::chrono::steady_clock::now();
         auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        grain_size_times.emplace_back(grain_size, elapsed_time.count());
-        std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed_time.count() << " microseconds\n";
+        grain_size_times.emplace_back(grain_size, elapsed_time.count(), task_count.load());
+        std::cout << "Grain size: " << grain_size << ", Time taken: " << elapsed_time.count() << " microseconds, Tasks: " << task_count.load() << "\n";
 
-        output_file << grain_size << " " << elapsed_time.count() << "\n";  // Saving to a file
+        output_file << grain_size << " " << elapsed_time.count() << " " << task_count.load() << "\n";  // Saving to a file
     }
 
     // // No grain size specified, commented out to keep it in case the loop above does not work
